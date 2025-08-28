@@ -1,0 +1,52 @@
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+
+approval_kb = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="✅ Всё понятно, продолжаем", callback_data='get_item_link')],
+    [InlineKeyboardButton(text="❓ FAQ", url='https://t.me/BelarusPoizonShip/8')]
+])
+
+help_link_kb = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="❓ Где найти ссылку?", url="https://t.me/BelarusPoizonShip/8")]
+])
+
+help_size_kb = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="❓ Как выбрать размер?", url="https://t.me/BelarusPoizonShip/8")]
+])
+
+help_price_kb = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="❓ Какую цену выбрать?", url="https://t.me/BelarusPoizonShip/8")]
+])
+
+def get_manager_approval_kb(order_id):
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="✅ Принять", callback_data=f"manager_order_accept_{order_id}")],
+        [InlineKeyboardButton(text="❌ Отклонить", callback_data=f"manager_order_cancel_{order_id}")]
+    ])
+
+manage_order_kb = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="➕ Добавить ещё", callback_data="order_add")],
+    [InlineKeyboardButton(text="✏️ Редактировать", callback_data="order_edit")],
+    [InlineKeyboardButton(text="✅ Оформить заказ", callback_data="order_submit")]
+])
+
+empty_order_kb = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="Добавить товар в заказ", callback_data="get_item_link")]
+])
+
+def get_items_list_kb(items):
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text=f"Товар {i+1}: {item['size']} ({item['link'][:25]}...)",
+            callback_data=f"edit_item_{i}"
+        )]
+        for i, item in enumerate(items)
+    ])
+
+edit_item_kb = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="🔗 Изменить ссылку", callback_data="edit_link")],
+    [InlineKeyboardButton(text="📏 Изменить размер", callback_data="edit_size")],
+    [InlineKeyboardButton(text="🏷️ Изменить цену", callback_data="edit_price")],
+    [InlineKeyboardButton(text="❌ Удалить из заказа", callback_data="delete_item")],
+    [InlineKeyboardButton(text="⬅️ Назад", callback_data="order_edit")],
+])

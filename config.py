@@ -1,0 +1,28 @@
+import os
+from dotenv import load_dotenv
+
+API_TOKEN = os.getenv("BOT_API_TOKEN")
+
+# --- Курсы юаня ---
+EXCHANGE_RATE_API_URL = 'https://api.nbrb.by/ExRates/Rates/CNY?ParamMode=2'
+RATES_CACHE_TTL = 24*60*60  # in seconds
+# RATES_CACHE_TTL = 10  # in seconds
+
+# --- TG ---
+MANAGER_ID = -1003064929034  # канал с менеджерами
+MANAGER_URL = "https://t.me/PoizonBelarusManager"
+
+NEWS_CHANEL_ID = -1002940403775
+RATE_MESSAGE_ID = 43
+RATE_MESSAGE_TEMPLATE = (
+    "💱 Актуальный курс юаня:\n\n"
+    "<b>🇨🇳 1 CNY → 🇧🇾 {rate} BYN</b>\n\n"
+    "<i>⏱️ Обновлено: {update_ts}</i>"
+)
+
+# --- ADMIN ---
+ADMIN_IDS = [
+    817879037, # я
+    889218380, # пашок
+]
+ORDERS_PAGE_SIZE = 5  # кол-во заказов на странице при выводе (пагинация)
