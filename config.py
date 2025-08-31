@@ -13,8 +13,9 @@ RATES_CACHE_TTL = 24*60*60  # in seconds
 MANAGER_ID = -1003064929034  # канал с менеджерами
 MANAGER_URL = "https://t.me/PoizonBelarusManager"
 
-NEWS_CHANEL_ID = -1002940403775
-RATE_MESSAGE_ID = 43
+# --- RATE UPDATER ---
+NEWS_CHANEL_ID = -1001146385584
+RATE_MESSAGE_ID = 36
 RATE_MESSAGE_TEMPLATE = (
     "💱 Актуальный курс юаня:\n\n"
     "<b>🇨🇳 1 CNY → 🇧🇾 {rate} BYN</b>\n\n"
