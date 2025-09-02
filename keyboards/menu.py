@@ -7,6 +7,7 @@ def get_menu_for_user(user_id: int) -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text="📦Создать заказ", callback_data='new_order')],
             [InlineKeyboardButton(text="👤Личный кабинет", callback_data='account')],
             [InlineKeyboardButton(text="💱 Текущий курс", callback_data='rates')],
+            [InlineKeyboardButton(text="❓ FAQ", callback_data='faq')],
             [InlineKeyboardButton(text="💬 Связаться с нами", url=MANAGER_URL)]
         ]
     )
