@@ -7,7 +7,6 @@ API_TOKEN = os.getenv("BOT_API_TOKEN")
 # --- Курсы юаня ---
 EXCHANGE_RATE_API_URL = 'https://api.nbrb.by/ExRates/Rates/CNY?ParamMode=2'
 RATES_CACHE_TTL = 24*60*60  # in seconds
-# RATES_CACHE_TTL = 10  # in seconds
 
 # --- TG ---
 MANAGER_ID = -1003064929034  # канал с менеджерами
