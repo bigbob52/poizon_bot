@@ -1,30 +1,11 @@
-from mailbox import Message
-
 from aiogram import types, Router, F
 from aiogram.filters import Command
 
-from keyboards.menu import get_menu_for_user
+from .common import send_main_menu
 from db.users import add_user
-from config import ADMIN_IDS
 
 
 router = Router()
-
-async def send_main_menu(user_id: int, destination: types.CallbackQuery | types.Message):
-    """Отправка главного меню пользователю"""
-    kb = get_menu_for_user(user_id)
-    if isinstance(destination, types.Message):
-        await destination.answer(
-            "Здарова, я бот! Выбирай кнопку",
-            reply_markup=kb
-        )
-    elif isinstance(destination, types.CallbackQuery):
-        await destination.message.edit_text(
-            "Здарова, я бот! Выбирай кнопку",
-            reply_markup=kb
-        )
-        await destination.answer()
-
 
 @router.message(Command("start"))
 async def start_cmd(message: types.Message):
@@ -33,7 +14,6 @@ async def start_cmd(message: types.Message):
     add_user(user_id, username)
 
     await send_main_menu(user_id, message)
-
 
 @router.callback_query(F.data == "main_menu")
 async def main_menu_cb(callback: types.CallbackQuery):
