@@ -4,6 +4,9 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 import re
+import asyncio
+
+from pyexpat.errors import messages
 
 from config import MANAGER_ID
 from db.orders import create_order, update_order_status
@@ -22,7 +25,7 @@ class OrderFSM(StatesGroup):
 async def show_current_order(message: Message, items: list):
     """Отображение текущего заказа"""
     if items:
-        await message.answer(
+        await message.edit_text(
             f"<b>📦 Ваш заказ:</b>\n\n" +
             "\n\n".join(
                 [
@@ -58,8 +61,8 @@ async def save_item_field(state: FSMContext, field_name: str, value):
 
 # --- 1. Начало заказа ---
 @router.callback_query(F.data == "new_order")
-async def new_order_handler(callback: CallbackQuery):
-    await callback.message.answer(
+async def new_order_handler(callback: CallbackQuery, state: FSMContext):
+    bot_msg = await callback.message.edit_text(
         text=(
             "<b>ℹ️ Перед началом оформления заказа рекомендуем ознакомиться с инструкцией (FAQ).</b>\n\n"
             "Зафиксированная ботом цена может быть скорректирована из-за изменений курса юаня и наличия товара на складах поставщика. "
@@ -67,13 +70,15 @@ async def new_order_handler(callback: CallbackQuery):
         ),
         reply_markup=approval_kb
     )
+    await state.update_data(bot_message=bot_msg)
     await callback.answer()
 
 
 # --- 2. Пользователь согласился ---
 @router.callback_query(F.data == "get_item_link")
 async def ask_item_link(callback: CallbackQuery, state: FSMContext):
-    await callback.message.answer("🔗 Отправьте ссылку на товар: ", reply_markup=help_link_kb)
+    bot_msg = await callback.message.edit_text("🔗 Отправьте ссылку на товар: ", reply_markup=help_link_kb)
+    await state.update_data(bot_message=bot_msg)
     await state.set_state(OrderFSM.link)
     await callback.answer()
 
@@ -81,6 +86,12 @@ async def ask_item_link(callback: CallbackQuery, state: FSMContext):
 # --- 3. Проверка ссылки ---
 @router.message(StateFilter(OrderFSM.link))
 async def ask_item_size(message: Message, state: FSMContext):
+    # await state.update_data(link=message.text)
+    await message.delete()
+
+    data = await state.get_data()
+    bot_msg = data["bot_message"]
+
 
     url_regex = r'https?://[^\s]+'
     allowed_prefixes = (
@@ -90,14 +101,16 @@ async def ask_item_size(message: Message, state: FSMContext):
 
     urls = re.search(url_regex, message.text.strip())
     if not urls:
-        await message.answer(
+        await bot_msg.edit_text(
             "❌ В вашем сообщении не было найдено ссылки.\n"
-            "Пожалуйста, отправьте корректную ссылку с Poizon"
+            "Пожалуйста, отправьте корректную ссылку с Poizon",
+            reply_markup=help_link_kb
         )
+        return
 
     url = urls.group(0)
     if not any(url.startswith(prefix) for prefix in allowed_prefixes):
-        await message.answer(
+        await bot_msg.edit_text(
             "❌ Ссылка должна быть с сайта Poizon\n"
             "Пожалуйста, проверьте вашу ссылку и пришлите ее",
             reply_markup=help_link_kb
@@ -107,15 +120,16 @@ async def ask_item_size(message: Message, state: FSMContext):
     items, is_edited = await save_item_field(state, "link", url)
 
     if is_edited:
-        await message.answer("✅ Ссылка обновлена!")
-        await show_current_order(message, items)
+        await bot_msg.edit_text("✅ Ссылка обновлена!")
+        await asyncio.sleep(1)
+        await show_current_order(bot_msg, items)
     else:
 
-        await message.answer(
+        await bot_msg.edit_text(
             text=(
                 "✅ Ссылка принята!\n"
                 "Теперь укажите размер товара\n"
-                "Если у товара нет — размера, поставьте «<code>—</code>»"
+                "Если у товара нет — размера, поставьте «—»"
             ),
             reply_markup=help_size_kb,
         )
@@ -126,16 +140,24 @@ async def ask_item_size(message: Message, state: FSMContext):
 @router.message(StateFilter(OrderFSM.size))
 async def ask_item_price(message: Message, state: FSMContext):
     # todo: можно сделать обработчик тоже типа isdigit() или in (M, L, XL...)
+    await message.delete()
     size = message.text.strip()
+
+    data = await state.get_data()
+    bot_msg = data["bot_message"]
+
     items, is_edited = await save_item_field(state, "size", size)
     if is_edited:
-        await message.answer("✅ Размер обновлен!")
-        await show_current_order(message, items)
+        await bot_msg.edit_text("✅ Размер обновлен!")
+        await asyncio.sleep(1)
+        await show_current_order(bot_msg, items)
     else:
-        await message.answer(
+        await bot_msg.edit_text(
             text=(
                 "✅ Размер сохранен!\n "
-                "Теперь введите цену товара в юанях (CNY)."
+                "Теперь введите цену товара в юанях (CNY).\n\n"
+                "Цена указана на странице товара при выборе размера.\n"
+                "<i>Например: 599</i>"
             ),
             reply_markup=help_price_kb)
         await state.set_state(OrderFSM.price)
@@ -144,11 +166,16 @@ async def ask_item_price(message: Message, state: FSMContext):
 # --- 5. Сохраняем цену ---
 @router.message(StateFilter(OrderFSM.price))
 async def add_item_to_order(message: Message, state: FSMContext):
+    await message.delete()
     price_text = message.text.strip()
+
+    data = await state.get_data()
+    bot_msg = data["bot_message"]
 
     if not price_text.isdigit():
         await message.answer(
-            "❌ Цена должна быть числом!",
+            "❌ Цена должна быть числом!\n"
+            "Введите корректную цену товара.",
             reply_markup=help_price_kb
         )
         return
@@ -157,8 +184,9 @@ async def add_item_to_order(message: Message, state: FSMContext):
     items, is_edited = await save_item_field(state, "price", price)
 
     if is_edited:
-        await message.answer("✅ Цена обновлена!")
-        await show_current_order(message, items)
+        await bot_msg.edit_text("✅ Цена обновлена!")
+        await asyncio.sleep(1)
+        await show_current_order(bot_msg, items)
     else:
         data = await state.get_data()
         link = data.get("link")
@@ -167,15 +195,17 @@ async def add_item_to_order(message: Message, state: FSMContext):
         items.append({"link": link, "size": size, "price": price})
 
         await state.update_data(items=items)
-        await show_current_order(message, items)
+        await show_current_order(bot_msg, items)
 
 
 # --- 6. Обработка финальных кнопок ---
 # -- ADD --
 @router.callback_query(F.data == "order_add")
 async def add_more(callback: CallbackQuery, state: FSMContext):
-    await callback.message.answer("Добавляем новый товар в заказ!\n\n"
-                                  "Отправь ссылку на новый товар: ")
+    await callback.message.edit_text(
+        "➕ Добавляем новый товар в заказ.\n\n"
+        "🔗 Отправь ссылку на новый товар: "
+    )
     await state.set_state(OrderFSM.link)
     await callback.answer()
 
@@ -216,21 +246,21 @@ async def edit_item(callback: CallbackQuery, state: FSMContext):
 # редачим ссылку
 @router.callback_query(F.data == "edit_link")
 async def edit_link(callback: CallbackQuery, state: FSMContext):
-    await callback.message.answer("Отправьте новую ссылку на товар: ")
+    await callback.message.edit_text("🔗 Отправьте новую ссылку на товар: ")
     await state.set_state(OrderFSM.link)
     await callback.answer()
 
 # редачим размер
 @router.callback_query(F.data == "edit_size")
 async def edit_size(callback: CallbackQuery, state: FSMContext):
-    await callback.message.answer("Отправьте новый размер товара: ")
+    await callback.message.edit_text("📏 Отправьте новый размер товара: ")
     await state.set_state(OrderFSM.size)
     await callback.answer()
 
 # редачим размер
 @router.callback_query(F.data == "edit_price")
 async def edit_size(callback: CallbackQuery, state: FSMContext):
-    await callback.message.answer("Отправьте новую цену товара: ")
+    await callback.message.answer("🏷️ Отправьте новую цену товара: ")
     await state.set_state(OrderFSM.price)
     await callback.answer()
 
