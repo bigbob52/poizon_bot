@@ -6,11 +6,9 @@ from aiogram.fsm.state import StatesGroup, State
 import re
 import asyncio
 
-from pyexpat.errors import messages
-
 from config import MANAGER_ID
 from db.orders import create_order, update_order_status
-from keyboards.menu import get_menu_for_user
+from .common import send_main_menu
 
 from handlers.keyboards.new_order import *
 
@@ -198,6 +196,14 @@ async def add_item_to_order(message: Message, state: FSMContext):
         await show_current_order(bot_msg, items)
 
 
+# --- Отмена заказа на каком-то из этапов ---
+@router.callback_query(F.data == "cancel_order")
+async def cancel_order(callback: CallbackQuery, state: FSMContext):
+    await state.clear()
+    await callback.answer("❌ Ваш заказ отменен.", show_alert=False)
+    await send_main_menu(callback.from_user.id, callback)
+
+
 # --- 6. Обработка финальных кнопок ---
 # -- ADD --
 @router.callback_query(F.data == "order_add")
@@ -341,10 +347,7 @@ async def submit_order(callback: CallbackQuery, state: FSMContext):
     await state.clear()
 
     # возвращаем в мейн меню
-    await callback.message.answer(
-        "🏠 Вы вернулись в главное меню",
-        reply_markup=get_menu_for_user(user.id)
-    )
+    await send_main_menu(user['id'], callback.message)
     await callback.answer()
 
 

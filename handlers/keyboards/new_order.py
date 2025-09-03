@@ -4,19 +4,23 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 approval_kb = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="✅ Всё понятно, продолжаем", callback_data='get_item_link')],
-    [InlineKeyboardButton(text="❓ FAQ", url='https://t.me/BelarusPoizonShip/8')]
+    [InlineKeyboardButton(text="❓ FAQ", url='https://t.me/BelarusPoizonShip/8')],
+    [InlineKeyboardButton(text="🏠 Вернуться в меню", callback_data="cancel_order")]
 ])
 
 help_link_kb = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text="❓ Где найти ссылку?", url="https://t.me/BelarusPoizonShip/8")]
+    [InlineKeyboardButton(text="❓ Где найти ссылку?", url="https://t.me/PoizonBelarusShip/62")],
+    [InlineKeyboardButton(text="🏠 Вернуться в меню", callback_data="cancel_order")]
 ])
 
 help_size_kb = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text="❓ Как выбрать размер?", url="https://t.me/BelarusPoizonShip/8")]
+    [InlineKeyboardButton(text="❓ Как выбрать размер?", url="https://t.me/PoizonBelarusShip/62")],
+    [InlineKeyboardButton(text="🏠 Вернуться в меню", callback_data="cancel_order")]
 ])
 
 help_price_kb = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text="❓ Какую цену выбрать?", url="https://t.me/BelarusPoizonShip/8")]
+    [InlineKeyboardButton(text="❓ Где найти цену?", url="https://t.me/PoizonBelarusShip/62")],
+    [InlineKeyboardButton(text="🏠 Вернуться в меню", callback_data="cancel_order")]
 ])
 
 def get_manager_approval_kb(order_id):
