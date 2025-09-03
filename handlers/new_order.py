@@ -3,6 +3,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
+import re
 
 from config import MANAGER_ID
 from db.orders import create_order, update_order_status
@@ -22,14 +23,17 @@ async def show_current_order(message: Message, items: list):
     """Отображение текущего заказа"""
     if items:
         await message.answer(
-            f"📦 <b>Ваш заказ:</b>\n"
-            f"💰 Общая сумма: {sum(item['price'] for item in items)}¥\n\n" +
+            f"<b>📦 Ваш заказ:</b>\n\n" +
             "\n\n".join(
-                [f"{i + 1}. {item['link']}\n"
-                 f"Размер: {item['size']}\n"
-                 f"Цена: {item['price']}¥"
-                 for i, item in enumerate(items)]
-            ),
+                [
+                    f"<u>Позиция №{i+1}</u>\n"
+                    f"<b>Товар:</b> {item['link']}\n"
+                    f"<b>Размер:</b> {item['size']}\n"
+                    f"<b>Цена:</b> {item['price']}¥"
+                    for i, item in enumerate(items)
+                ]
+            ) + "\n\n"
+            f"<b>💰 Общая сумма: {sum(item['price'] for item in items)}¥</b>",
             reply_markup=manage_order_kb
         )
     else:
@@ -56,29 +60,42 @@ async def save_item_field(state: FSMContext, field_name: str, value):
 @router.callback_query(F.data == "new_order")
 async def new_order_handler(callback: CallbackQuery):
     await callback.message.answer(
-        "Перед началом создания заказа рекомендуем ознакомиться с инструкцией\n\n"
-        "Конечная цена может отличаться бла бла бла йоууу ",
+        text=(
+            "<b>ℹ️ Перед началом оформления заказа рекомендуем ознакомиться с инструкцией (FAQ).</b>\n\n"
+            "Зафиксированная ботом цена может быть скорректирована из-за изменений курса юаня и наличия товара на складах поставщика. "
+            "Точную сумму менеджер сообщит вам персонально после оформления заказа."
+        ),
         reply_markup=approval_kb
     )
     await callback.answer()
 
+
 # --- 2. Пользователь согласился ---
 @router.callback_query(F.data == "get_item_link")
 async def ask_item_link(callback: CallbackQuery, state: FSMContext):
-    await callback.message.answer("Отправьте ссылку на товар: ", reply_markup=help_link_kb)
+    await callback.message.answer("🔗 Отправьте ссылку на товар: ", reply_markup=help_link_kb)
     await state.set_state(OrderFSM.link)
     await callback.answer()
+
 
 # --- 3. Проверка ссылки ---
 @router.message(StateFilter(OrderFSM.link))
 async def ask_item_size(message: Message, state: FSMContext):
-    url = message.text.strip()
 
+    url_regex = r'https?://[^\s]+'
     allowed_prefixes = (
         "https://dw4.co/t/A/",
         "https://fast.dewu.com/page/productDetail"
     )
 
+    urls = re.search(url_regex, message.text.strip())
+    if not urls:
+        await message.answer(
+            "❌ В вашем сообщении не было найдено ссылки.\n"
+            "Пожалуйста, отправьте корректную ссылку с Poizon"
+        )
+
+    url = urls.group(0)
     if not any(url.startswith(prefix) for prefix in allowed_prefixes):
         await message.answer(
             "❌ Ссылка должна быть с сайта Poizon\n"
@@ -95,8 +112,11 @@ async def ask_item_size(message: Message, state: FSMContext):
     else:
 
         await message.answer(
-            "✅ Ссылка принята! Теперь введите размер товара\n"
-            "Если у товара нет размера, поставьте <code>-</code>",
+            text=(
+                "✅ Ссылка принята!\n"
+                "Теперь укажите размер товара\n"
+                "Если у товара нет — размера, поставьте «<code>—</code>»"
+            ),
             reply_markup=help_size_kb,
         )
         await state.set_state(OrderFSM.size)
@@ -112,7 +132,12 @@ async def ask_item_price(message: Message, state: FSMContext):
         await message.answer("✅ Размер обновлен!")
         await show_current_order(message, items)
     else:
-        await message.answer("✅ Размер получен! Введите цену товара в юанях", reply_markup=help_price_kb)
+        await message.answer(
+            text=(
+                "✅ Размер сохранен!\n "
+                "Теперь введите цену товара в юанях (CNY)."
+            ),
+            reply_markup=help_price_kb)
         await state.set_state(OrderFSM.price)
 
 
@@ -154,7 +179,6 @@ async def add_more(callback: CallbackQuery, state: FSMContext):
     await state.set_state(OrderFSM.link)
     await callback.answer()
 
-
 # -- EDIT --
 # выбираем какой товар редачить
 @router.callback_query(F.data == "order_edit")
@@ -167,8 +191,7 @@ async def edit_order(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
         return
 
-
-    await callback.message.answer("Выберите товар для редактирования:", reply_markup=get_items_list_kb(items))
+    await callback.message.edit_text("Выберите товар для редактирования:", reply_markup=get_items_list_kb(items))
     await callback.answer()
 
 # выбираем что редачить у товара, либо удаляем его
@@ -182,8 +205,8 @@ async def edit_item(callback: CallbackQuery, state: FSMContext):
     item = data["items"][index]
 
 
-    await callback.message.answer(
-        f"Вы редактируете товар {index+1}:\n"
+    await callback.message.edit_text(
+        f"Вы редактируете позицию №{index+1}:\n"
         f"Ссылка: {item['link']}\n"
         f"Размер: {item['size']}",
         reply_markup=edit_item_kb
@@ -229,6 +252,14 @@ async def delete_item(callback: CallbackQuery, state: FSMContext):
     await show_current_order(callback.message, items)
     await callback.answer()
 
+# ничего не делаем, возвращаемся в заказ
+@router.callback_query(F.data == "cancel_editing")
+async def cancel_editing(callback: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    items = data.get("items", [])
+
+    await show_current_order(callback.message, items)
+    await callback.answer()
 
 # -- SUBMIT --
 # отправляем в канал менеджерам, добавляем в бд
@@ -269,12 +300,19 @@ async def submit_order(callback: CallbackQuery, state: FSMContext):
         reply_markup=get_manager_approval_kb(order_id)
     )
 
-    await callback.message.answer(f"✅ Ваш заказ #{order_id} передан менеджеру. \nСкоро с вами свяжутся!")
+    await callback.message.edit_text(
+        text=(
+            f"✅ Заказ #{order_id} принят!\n\n"
+            f"Наш менеджер уже получил уведомление и свяжется с вами в течение часа для уточнения всех деталей. Пожалуйста, ожидайте.\n\n"
+            f"<i>Спасибо, что выбрали нас!</i> 🩵"
+        ),
+        reply_markup= None
+    )
     await state.clear()
 
     # возвращаем в мейн меню
     await callback.message.answer(
-        "🏠 Вы вернулись в главное меню. Что будем делать?",
+        "🏠 Вы вернулись в главное меню",
         reply_markup=get_menu_for_user(user.id)
     )
     await callback.answer()

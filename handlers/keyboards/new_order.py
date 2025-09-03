@@ -1,4 +1,5 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
 approval_kb = InlineKeyboardMarkup(inline_keyboard=[
@@ -35,13 +36,19 @@ empty_order_kb = InlineKeyboardMarkup(inline_keyboard=[
 ])
 
 def get_items_list_kb(items):
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(
-            text=f"Товар {i+1}: {item['size']} ({item['link'][:25]}...)",
-            callback_data=f"edit_item_{i}"
-        )]
-        for i, item in enumerate(items)
-    ])
+    kb = InlineKeyboardBuilder()
+
+    for i, item in enumerate(items):
+        kb.row(
+            InlineKeyboardButton(
+                text=f"Позиция №{i + 1}",
+                callback_data=f"edit_item_{i}"
+            )
+        )
+
+    kb.row(InlineKeyboardButton(text="↩️ Вернуться к заказу", callback_data="cancel_editing"))
+
+    return kb.as_markup()
 
 edit_item_kb = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="🔗 Изменить ссылку", callback_data="edit_link")],
@@ -49,4 +56,8 @@ edit_item_kb = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="🏷️ Изменить цену", callback_data="edit_price")],
     [InlineKeyboardButton(text="❌ Удалить из заказа", callback_data="delete_item")],
     [InlineKeyboardButton(text="⬅️ Назад", callback_data="order_edit")],
+])
+
+final_kb = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="🏠Вернуться в меню ")]
 ])
