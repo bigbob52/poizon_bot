@@ -27,7 +27,8 @@ help_price_kb = InlineKeyboardMarkup(inline_keyboard=[
 manage_order_kb = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="➕ Добавить ещё", callback_data="order_add")],
     [InlineKeyboardButton(text="✏️ Редактировать", callback_data="order_edit")],
-    [InlineKeyboardButton(text="✅ Оформить заказ", callback_data="order_submit")]
+    [InlineKeyboardButton(text="✅ Оформить заказ", callback_data="order_submit")],
+    [InlineKeyboardButton(text="🏠 Вернуться в меню", callback_data="cancel_order")]
 ])
 
 empty_order_kb = InlineKeyboardMarkup(inline_keyboard=[
@@ -58,7 +59,7 @@ edit_item_kb = InlineKeyboardMarkup(inline_keyboard=[
 ])
 
 final_kb = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text="🏠Вернуться в меню ")]
+    [InlineKeyboardButton(text="🏠Вернуться в меню")]
 ])
 
 manager_link_kb = InlineKeyboardMarkup(inline_keyboard=[
