@@ -34,6 +34,12 @@ CREATE TABLE IF NOT EXISTS order_items (
 )
 """)
 
+# ⚡ Сместить автоинкремент если таблица orders пуста
+cur.execute("SELECT COUNT(*) FROM orders")
+if cur.fetchone()[0] == 0:
+    cur.execute("DELETE FROM sqlite_sequence WHERE name = 'orders'")
+    cur.execute("INSERT INTO sqlite_sequence (name, seq) VALUES ('orders', 325)")
+
 conn.commit()
 
 
