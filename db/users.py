@@ -54,3 +54,14 @@ def update_orders(user_id: int, amount: int):
 def update_bonus(user_id: int, amount: int):
     cur.execute("UPDATE users SET bonus = bonus + ? WHERE user_id = ?", (amount, user_id))
     conn.commit()
+
+def get_user_by_order_id(order_id: int):
+    cur.execute("""
+        SELECT u.* FROM users u
+        JOIN orders o ON u.user_id = o.user_id
+        WHERE o.order_id = ?
+    """, (order_id,))
+    row = cur.fetchone()
+
+
+    return dict(row) if row else None

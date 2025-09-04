@@ -24,12 +24,6 @@ help_price_kb = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="🏠 Вернуться в меню", callback_data="cancel_order")]
 ])
 
-def get_manager_approval_kb(order_id):
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="✅ Принять", callback_data=f"manager_order_accept_{order_id}")],
-        [InlineKeyboardButton(text="❌ Отклонить", callback_data=f"manager_order_cancel_{order_id}")]
-    ])
-
 manage_order_kb = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="➕ Добавить ещё", callback_data="order_add")],
     [InlineKeyboardButton(text="✏️ Редактировать", callback_data="order_edit")],
@@ -69,4 +63,16 @@ final_kb = InlineKeyboardMarkup(inline_keyboard=[
 
 manager_link_kb = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="📞 Связаться с менеджером", url=MANAGER_URL)]
+])
+
+# MANAGERS
+def get_manager_approval_kb(order_id):
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="✅ Принять", callback_data=f"manager_order_accept:{order_id}")],
+        [InlineKeyboardButton(text="❌ Отклонить", callback_data=f"manager_order_cancel:{order_id}")]
+    ])
+
+manager_confirm_cancel_kb = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="✅ Отправить пользователю", callback_data="confirm_cancel_comment")],
+    [InlineKeyboardButton(text="❌ Отмена", callback_data="cancel_cancel_process")]
 ])

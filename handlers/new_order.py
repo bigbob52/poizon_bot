@@ -8,6 +8,7 @@ import asyncio
 
 from config import MANAGER_ID
 from db.orders import create_order, update_order_status
+from db.users import get_user_by_order_id
 from .common import send_main_menu
 
 from handlers.keyboards.new_order import *
@@ -94,7 +95,8 @@ async def ask_item_size(message: Message, state: FSMContext):
     url_regex = r'https?://[^\s]+'
     allowed_prefixes = (
         "https://dw4.co/t/A/",
-        "https://fast.dewu.com/page/productDetail"
+        "https://fast.dewu.com/page/productDetail",
+        "https://www.dewu.com/product-detail"
     )
 
     urls = re.search(url_regex, message.text.strip())
@@ -332,7 +334,6 @@ async def submit_order(callback: CallbackQuery, state: FSMContext):
     await callback.bot.send_message(
         chat_id=MANAGER_ID,
         text=order_text,
-        disable_web_page_preview=True,
         reply_markup=get_manager_approval_kb(order_id)
     )
 
@@ -349,7 +350,7 @@ async def submit_order(callback: CallbackQuery, state: FSMContext):
     else:
         await callback.message.edit_text(
             text=(
-                f"✅ Заказ #{order_id} принят!\n\n"
+                f"✅ Заказ #{order_id} принят в обработку!\n\n"
                 "⚠️ <b>Внимание! У вас отсутствует публичный тег (@username)!</b>\n"
                 "В связи с этим наш менеджер не сможет с вами связаться.\n"
                 "Пожалуйста, свяжитесь с менеджером самостоятельно.\n\n"
@@ -367,30 +368,51 @@ async def submit_order(callback: CallbackQuery, state: FSMContext):
 
 
 # -- FOR MANAGERS --
-@router.callback_query(F.data.startswith("manager_order_accept_"))
+
+# TODO: если надо вернуться из отклонения. пока без
+def render_order_for_managers():
+    pass
+
+
+# Менеджер принимает заказ
+@router.callback_query(F.data.startswith("manager_order_accept:"))
 async def manager_order_accept(callback: CallbackQuery):
-    order_id = int(callback.data.split("_")[-1])
+    order_id = int(callback.data.split(":")[-1])
     update_order_status(order_id, "accepted")
     new_text = callback.message.text.replace("Статус: new", "Статус: accepted")
 
-    await callback.message.edit_reply_markup(None)  # убираем кнопки
-    await callback.message.edit_text(
-        text=new_text,
-        parse_mode="HTML",
-        disable_web_page_preview=True
-    )
-    await callback.answer("Заказ принят ✅")
 
-@router.callback_query(F.data.startswith("manager_order_canceled_"))
-async def manager_order_cancel(callback: CallbackQuery):
-    order_id = int(callback.data.split("_")[-1])
+    await callback.message.edit_reply_markup(None)  # убираем кнопки
+    await callback.message.edit_text(text=new_text)
+    await callback.answer("Заказ принят ✅", show_alert=False)
+
+
+# Менеджер отклоняет заказ
+@router.callback_query(F.data.startswith("manager_order_cancel:"))
+async def manager_order_cancel(callback: CallbackQuery, state: FSMContext):
+    order_id = int(callback.data.split(":")[-1])
+
+    # пишем юзеру
+    user_data = get_user_by_order_id(order_id)
+    await callback.bot.send_message(
+        chat_id=user_data["user_id"],
+        text=f"❌ Заказ #{order_id} был отклонен!\n\n"
+             f"<b>Причина</b>: Указаны некорректные данные при офомлении заказа\n\n"
+             f"Пожалуйста, свяжитесь с нами для уточнения деталей или оформите заказ повторно.",
+        reply_markup=manager_link_kb
+    )
+
+    # меняем статус
     update_order_status(order_id, "canceled")
+
     new_text = callback.message.text.replace("Статус: new", "Статус: canceled")
 
     await callback.message.edit_reply_markup(None)  # убираем кнопки
-    await callback.message.edit_text(
-        text=new_text,
-        parse_mode="HTML",
-        disable_web_page_preview=True
-    )
-    await callback.answer("Заказ отклонен ❌")
+    await callback.message.edit_text(text=new_text)
+    await callback.answer("Увед юзеру отправлен, заказ отменен ❌", show_alert=False)
+
+
+
+
+
+
