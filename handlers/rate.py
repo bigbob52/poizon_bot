@@ -18,7 +18,7 @@ async def show_rates(callback: types.CallbackQuery):
     update_ts = exchange_rate_cache.last_update
 
     await callback.message.edit_text(
-        RATE_MESSAGE_TEMPLATE.format(rate=rate, update_ts=update_ts),
+        RATE_MESSAGE_TEMPLATE.format(rate=f"{rate:.3f}", update_ts=update_ts),
         reply_markup=back_to_menu_kb
     )
     await callback.answer()
