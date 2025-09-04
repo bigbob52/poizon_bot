@@ -5,7 +5,7 @@ from config import MANAGER_URL
 
 approval_kb = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="✅ Всё понятно, продолжаем", callback_data='get_item_link')],
-    [InlineKeyboardButton(text="❓ FAQ", url='https://t.me/BelarusPoizonShip/8')],
+    [InlineKeyboardButton(text="❓ FAQ", url='https://t.me/PoizonBelarusShip/50')],
     [InlineKeyboardButton(text="🏠 Вернуться в меню", callback_data="cancel_order")]
 ])
 
