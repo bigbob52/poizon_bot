@@ -11,3 +11,4 @@ async def show_faq(callback: CallbackQuery):
         text="Выберите интересующий Вас вопрос из списка ниже",
         reply_markup=faq_kb
     )
+    await callback.answer()
