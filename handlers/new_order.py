@@ -369,11 +369,6 @@ async def submit_order(callback: CallbackQuery, state: FSMContext):
 
 # -- FOR MANAGERS --
 
-# TODO: если надо вернуться из отклонения. пока без
-def render_order_for_managers():
-    pass
-
-
 # Менеджер принимает заказ
 @router.callback_query(F.data.startswith("manager_order_accept:"))
 async def manager_order_accept(callback: CallbackQuery):
