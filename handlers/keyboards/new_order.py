@@ -1,6 +1,7 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from config import MANAGER_URL
 
 approval_kb = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="✅ Всё понятно, продолжаем", callback_data='get_item_link')],
@@ -64,4 +65,8 @@ edit_item_kb = InlineKeyboardMarkup(inline_keyboard=[
 
 final_kb = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="🏠Вернуться в меню ")]
+])
+
+manager_link_kb = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="📞 Связаться с менеджером", url=MANAGER_URL)]
 ])
