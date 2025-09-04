@@ -8,14 +8,13 @@ async def send_main_menu(user_id: int, destination: CallbackQuery | Message):
     if isinstance(destination, Message):
         await destination.answer(
             text="Приветствую! 👋\n"
-                 "Я ваш помощник в оформлении заказов.\n"
+                 "Я ваш помощник в оформлении заказов.\n\n"
                  "Выберите нужное действие из меню ниже.",
             reply_markup=kb
         )
     elif isinstance(destination, CallbackQuery):
         await destination.message.edit_text(
-            text="Приветствую! 👋\n"
-                 "Я ваш помощник в оформлении заказов.\n"
+            text="Я ваш помощник в оформлении заказов.\n\n"
                  "Выберите нужное действие из меню ниже.",
             reply_markup=kb
         )
