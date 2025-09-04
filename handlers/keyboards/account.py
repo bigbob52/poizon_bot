@@ -2,7 +2,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from math import ceil
 
-from config import ORDERS_PAGE_SIZE
+from config import ORDERS_PAGE_SIZE, STATUS_DISPLAY
 
 
 
@@ -27,7 +27,7 @@ def get_user_orders_list_kb(orders: list[dict], page=1) -> InlineKeyboardMarkup:
     for order in page_orders:
         kb.row(
             InlineKeyboardButton(
-                text=f"📦 Заказ #{order['order_id']}",
+                text=f"Заказ #{order['order_id']} | {STATUS_DISPLAY[order['status']]}",
                 callback_data=f"user_order_detail:{order['order_id']}"
             )
         )

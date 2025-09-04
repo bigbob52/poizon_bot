@@ -1,6 +1,6 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from config import ORDERS_PAGE_SIZE
+from config import ORDERS_PAGE_SIZE, STATUS_DISPLAY
 from math import ceil
 
 
@@ -18,12 +18,17 @@ def get_edit_order_kb(order_id: int) -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text="⬅️ Назад", callback_data="manage_orders")]
     ])
 
+# def get_order_status_kb(order_id: int) -> InlineKeyboardMarkup:
+#     return InlineKeyboardMarkup(inline_keyboard=[
+#         [InlineKeyboardButton(text="🆕 Новый (new)", callback_data=f"set_order_status:{order_id}:new")],
+#         [InlineKeyboardButton(text="🟢 Принят в работу (accepted)", callback_data=f"set_order_status:{order_id}:accepted")],
+#         [InlineKeyboardButton(text="✅ Выполнен (done)", callback_data=f"set_order_status:{order_id}:done")],
+#         [InlineKeyboardButton(text="🔴 Отменен (cancelled)", callback_data=f"set_order_status:{order_id}:cancelled")]
+#     ])
 def get_order_status_kb(order_id: int) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🆕 Новый (new)", callback_data=f"set_order_status:{order_id}:new")],
-        [InlineKeyboardButton(text="🟢 Принят в работу (accepted)", callback_data=f"set_order_status:{order_id}:accepted")],
-        [InlineKeyboardButton(text="✅ Выполнен (done)", callback_data=f"set_order_status:{order_id}:done")],
-        [InlineKeyboardButton(text="🔴 Отменен (canceled)", callback_data=f"set_order_status:{order_id}:canceled")]
+        [InlineKeyboardButton(text=display, callback_data=f"set_order_status:{order_id}:{status}")]
+        for status, display in STATUS_DISPLAY.items()
     ])
 
 def get_delete_confirm_kb(order_id: int) -> InlineKeyboardMarkup:
@@ -44,9 +49,9 @@ def get_orders_list_kb(orders: list[dict], page: int = 1) -> InlineKeyboardMarku
     for order in page_orders:
         kb.row(
             InlineKeyboardButton(
-                text=f"📦 Заказ #{order['order_id']} ({order['status']})",
+                text=f"Заказ #{order['order_id']} | {STATUS_DISPLAY[order['status']]}",
                 callback_data=f"order_detail:{order['order_id']}"
-                )
+            )
         )
 
 
