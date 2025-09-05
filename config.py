@@ -27,6 +27,9 @@ ADMIN_IDS = [
     889218380, # пашок
     894690269, # бебра
 ]
+
+ADMIN_ALERT_NEW_USER = False
+
 ORDERS_PAGE_SIZE = 5  # кол-во заказов на странице при выводе (пагинация)
 
 STATUS_DISPLAY = {
