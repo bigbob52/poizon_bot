@@ -62,6 +62,8 @@ def get_user_by_order_id(order_id: int):
         WHERE o.order_id = ?
     """, (order_id,))
     row = cur.fetchone()
-
-
     return dict(row) if row else None
+
+def get_all_users():
+    cur.execute("SELECT * FROM users ORDER BY created_at DESC")
+    return [dict(row) for row in cur.fetchall()]

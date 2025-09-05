@@ -3,9 +3,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery, Message, InlineKeyboardMarkup
 
-from .keyboards.manage_users import users_kb, get_edit_user_kb
+from .keyboards.manage_users import users_kb, get_edit_user_kb, get_users_list_kb
 from .keyboards.manage_orders import get_orders_list_kb
-from db.users import get_user_by_id, get_user_by_username, update_orders, update_bonus
+from db.users import get_user_by_id, get_user_by_username, update_orders, update_bonus, get_all_users
 from db.orders import get_user_orders
 
 router = Router()
@@ -44,11 +44,11 @@ async def render_user(user_data: dict, target, reply_markup: InlineKeyboardMarku
 
     if isinstance(target, CallbackQuery):
         # редактируем сообщение, из которого пришёл callback
-        await target.message.edit_text(text, reply_markup=reply_markup, parse_mode="HTML")
-        await target.answer()  # закрываем "часики" Telegram
+        await target.message.edit_text(text, reply_markup=reply_markup)
+        await target.answer()
     elif isinstance(target, Message):
         # отправляем новое сообщение, если это обычный текст от пользователя
-        await target.answer(text, reply_markup=reply_markup, parse_mode="HTML")
+        await target.answer(text, reply_markup=reply_markup)
 
 
 @router.callback_query(F.data == "manage_users")
@@ -138,5 +138,41 @@ async def ask_user_orders(callback: CallbackQuery):
     await callback.message.edit_text(
         f"Список заказов пользователя #{user_id}",
         reply_markup=get_orders_list_kb(orders)
+    )
+    await callback.answer()
+
+# --- Просмотр всех юзеров ---
+async def show_all_users(target: Message | CallbackQuery):
+    users = get_all_users()
+    if not users:
+        await target.message.edit_text("❌ Нет актуальных заказов")
+        return
+
+    await target.message.edit_text(
+        "📋 Все юзеры:",
+        reply_markup=get_users_list_kb(users, page=1)
+    )
+
+@router.callback_query(F.data == "get_all_users")
+async def get_all_users_(callback: CallbackQuery):
+    await show_all_users(callback)
+    await callback.answer()
+
+# пагинация
+@router.callback_query(F.data.startswith("users_page:"))
+async def paginate_users_list(callback: CallbackQuery):
+    page = int(callback.data.split(":")[-1])
+    users = get_all_users()
+    await callback.message.edit_reply_markup(
+        reply_markup=get_users_list_kb(users, page=page)
+    )
+
+@router.callback_query(F.data.startswith("user_detail:"))
+async def show_user(callback: CallbackQuery):
+    user_id = int(callback.data.split(":")[-1])
+    await render_user(
+        user_data=get_user_by_id(user_id),
+        target=callback,
+        reply_markup=get_edit_user_kb(user_id)
     )
     await callback.answer()
