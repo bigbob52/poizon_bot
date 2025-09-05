@@ -73,7 +73,7 @@ def get_order(order_id: int) -> tuple[dict | None, list[dict]]:
     return dict(order), items
 
 def get_user_orders(user_id: int):
-    cur.execute("SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC", (user_id,))
+    cur.execute("SELECT * FROM orders WHERE user_id = ? AND status != 'deleted' ORDER BY created_at DESC", (user_id,))
     return [dict(row) for row in cur.fetchall()]
 
 def update_order_status(order_id: int, status: str):
