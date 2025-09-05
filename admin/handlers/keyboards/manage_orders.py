@@ -1,6 +1,6 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from config import ORDERS_PAGE_SIZE, STATUS_DISPLAY
+from config import ITEMS_PER_PAGE, STATUS_DISPLAY
 from math import ceil
 
 
@@ -39,9 +39,9 @@ def get_delete_confirm_kb(order_id: int) -> InlineKeyboardMarkup:
 
 def get_orders_list_kb(orders: list[dict], page: int = 1) -> InlineKeyboardMarkup:
     # считаем сколько страниц надо
-    total_pages = max(1, ceil(len(orders) / ORDERS_PAGE_SIZE))
-    start = (page - 1) * ORDERS_PAGE_SIZE
-    end = start + ORDERS_PAGE_SIZE
+    total_pages = max(1, ceil(len(orders) / ITEMS_PER_PAGE))
+    start = (page - 1) * ITEMS_PER_PAGE
+    end = start + ITEMS_PER_PAGE
     page_orders = orders[start:end]
 
     kb = InlineKeyboardBuilder()
