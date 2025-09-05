@@ -4,7 +4,6 @@ from config import ITEMS_PER_PAGE, STATUS_DISPLAY
 from math import ceil
 
 
-# --- ORDERS ---
 orders_kb = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="🔍 Поиск по номеру заказа", callback_data="get_oder_by_id")],
     [InlineKeyboardButton(text="📋 Все заказы", callback_data="get_all_orders")],
@@ -18,13 +17,6 @@ def get_edit_order_kb(order_id: int) -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text="⬅️ Назад", callback_data="manage_orders")]
     ])
 
-# def get_order_status_kb(order_id: int) -> InlineKeyboardMarkup:
-#     return InlineKeyboardMarkup(inline_keyboard=[
-#         [InlineKeyboardButton(text="🆕 Новый (new)", callback_data=f"set_order_status:{order_id}:new")],
-#         [InlineKeyboardButton(text="🟢 Принят в работу (accepted)", callback_data=f"set_order_status:{order_id}:accepted")],
-#         [InlineKeyboardButton(text="✅ Выполнен (done)", callback_data=f"set_order_status:{order_id}:done")],
-#         [InlineKeyboardButton(text="🔴 Отменен (cancelled)", callback_data=f"set_order_status:{order_id}:cancelled")]
-#     ])
 def get_order_status_kb(order_id: int) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=display, callback_data=f"set_order_status:{order_id}:{status}")]
@@ -54,7 +46,6 @@ def get_orders_list_kb(orders: list[dict], page: int = 1) -> InlineKeyboardMarku
             )
         )
 
-
     nav_buttons = []
     if page > 1:
         nav_buttons.append(
@@ -70,5 +61,4 @@ def get_orders_list_kb(orders: list[dict], page: int = 1) -> InlineKeyboardMarku
 
     kb.row(InlineKeyboardButton(text="↩️ Назад в меню", callback_data="admin_panel"))
     return kb.as_markup()
-
 
