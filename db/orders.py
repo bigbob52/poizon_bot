@@ -1,5 +1,6 @@
 import sqlite3
 import os
+from datetime import datetime
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_PATH = os.path.join(BASE_DIR, "data", "bot.db")
@@ -92,3 +93,13 @@ def get_all_actual_orders() -> list[dict]:
     """Получить все заказы со статусами new, accepted"""
     cur.execute("SELECT * FROM orders WHERE status != 'deleted' ORDER BY created_at")
     return [dict(row) for row in cur.fetchall()]
+
+def count_all_orders() -> int:
+    cur.execute("SELECT COUNT(*) FROM orders")
+    return cur.fetchone()[0]
+
+def count_orders_for_period(start_time: datetime) -> int:
+    cur.execute("SELECT COUNT(*) FROM orders WHERE created_at >= ?",
+                (start_time.strftime("%Y-%m-%d %H:%M:%S"),),
+    )
+    return cur.fetchone()[0]

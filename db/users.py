@@ -1,5 +1,6 @@
 import sqlite3
 import os
+from datetime import datetime
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -67,3 +68,13 @@ def get_user_by_order_id(order_id: int):
 def get_all_users():
     cur.execute("SELECT * FROM users ORDER BY created_at DESC")
     return [dict(row) for row in cur.fetchall()]
+
+def count_all_users() -> int:
+    cur.execute("SELECT COUNT(*) FROM users")
+    return cur.fetchone()[0]
+
+def count_users_for_period(start_time: datetime) -> int:
+    cur.execute("SELECT COUNT(*) FROM users WHERE created_at >= ?",
+                (start_time.strftime("%Y-%m-%d %H:%M:%S"),),
+    )
+    return cur.fetchone()[0]
