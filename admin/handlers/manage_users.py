@@ -3,7 +3,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery, Message, InlineKeyboardMarkup
 
-from .keyboards.manage_users import users_kb, get_edit_user_kb, get_users_list_kb
+from .keyboards.manage_users import users_kb, get_edit_user_kb, get_users_list_kb, back_to_users_panel_kb
 from .keyboards.manage_orders import get_orders_list_kb
 from db.users import get_user_by_id, get_user_by_username, update_orders, update_bonus, get_all_users
 from db.orders import get_user_orders
@@ -23,7 +23,7 @@ async def render_user(user_data: dict, target, reply_markup: InlineKeyboardMarku
             await target.message.edit_text("❌ Пользователь не найден", reply_markup=users_kb)
             await target.answer()
         else:
-            await target.answer("❌ Пользователь не найден", reply_markup=users_kb)
+            await target.edit_text("❌ Пользователь не найден", reply_markup=users_kb)
         return
 
     user_id = user_data['user_id']
@@ -48,7 +48,7 @@ async def render_user(user_data: dict, target, reply_markup: InlineKeyboardMarku
         await target.answer()
     elif isinstance(target, Message):
         # отправляем новое сообщение, если это обычный текст от пользователя
-        await target.answer(text, reply_markup=reply_markup)
+        await target.edit_text(text, reply_markup=reply_markup)
 
 
 @router.callback_query(F.data == "manage_users")
@@ -59,26 +59,40 @@ async def manage_users(callback: CallbackQuery):
 # --- Поиск юзера по id или username ---
 @router.callback_query(F.data == "ask_user_identifier")
 async def ask_user_identifier(callback: CallbackQuery, state: FSMContext):
-    await callback.message.edit_text(
+    bot_msg = await callback.message.edit_text(
         "Введите идентификатор пользователя:\n\n"
-        "<i>Поддерживается поиск по id в формате <code>400939786</code> и по username <code>@username</code></i>"
+        "<i>Поддерживается поиск по id в формате <code>400939786</code> и по username <code>@username</code></i>",
+        reply_markup=back_to_users_panel_kb
     )
     await state.set_state(UserSearch.user_identifier)
+    await state.update_data(bot_message=bot_msg)
     await callback.answer()
 
 @router.message(UserSearch.user_identifier)
 async def get_user_identifier(message: Message, state: FSMContext):
+    await message.delete()
+
+    data = await state.get_data()
+    bot_msg = data["bot_message"]
+
     user_identifier = message.text.strip()
     if user_identifier.isdigit():
         user_data = get_user_by_id(int(user_identifier))
     elif user_identifier[0] == '@':
         user_data = get_user_by_username(user_identifier[1:])
     else:
-        await message.answer("Некорректный введенный идентификатор :(")
+        await bot_msg.edit_text("Некорректный введенный идентификатор :(\n\n Введите тег, либо юзернейм через @")
         return
 
-    await render_user(user_data, message)
+    await render_user(user_data, bot_msg)
     await state.clear()
+
+@router.callback_query(F.data == "back_to_users_panel")
+async def cancel_searching(callback: CallbackQuery, state: FSMContext):
+    await state.clear()
+    await callback.answer("❌ Поиск отменен", show_alert=False)
+    await callback.message.edit_text("Что с юзерами делаем?", reply_markup=users_kb)
+
 
 
 @router.callback_query(F.data.startswith("ask_order_count:"))

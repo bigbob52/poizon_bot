@@ -10,7 +10,6 @@ users_kb = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="⬅️ Назад", callback_data="admin_panel")]
 ])
 
-
 def get_edit_user_kb(user_id: int) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="📦 Изменить количество заказов", callback_data=f"ask_order_count:{user_id}")],
@@ -53,3 +52,7 @@ def get_users_list_kb(users: list[dict], page: int = 1) -> InlineKeyboardMarkup:
 
     kb.row(InlineKeyboardButton(text="↩️ Назад в меню", callback_data="admin_panel"))
     return kb.as_markup()
+
+back_to_users_panel_kb = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="⬅️ Назад", callback_data="manage_users")]
+])
