@@ -27,11 +27,13 @@ async def start_cmd(message: types.Message):
             f"Username: @{message.from_user.username or '—'}\n"
             f"Имя: {message.from_user.full_name}"
         )
-        for admin_id in ADMIN_IDS:
-            try:
-                await message.bot.send_message(admin_id, text)
-            except Exception as e:
-                logger.warning(f"Увед о регистрации юзера не отправился админу #{admin_id}. {e}")
+
+        if ADMIN_ALERT_NEW_USER:
+            for admin_id in ADMIN_IDS:
+                try:
+                    await message.bot.send_message(admin_id, text)
+                except Exception as e:
+                    logger.warning(f"Увед о регистрации юзера не отправился админу #{admin_id}. {e}")
 
 
     await send_main_menu(user_id, message)
